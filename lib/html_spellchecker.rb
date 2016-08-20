@@ -6,20 +6,49 @@ require "set"
 
 
 class HTML_Spellchecker
-  def self.english
-    @english ||= self.new("/usr/share/hunspell/en_US.aff", "/usr/share/hunspell/en_US.dic")
+  def self.english(rebuild=false)
+    if rebuild || @english.nil?
+      @english = self.new("dictionaries/en_US.aff", "dictionaries/en_US.dic")
+    end
+
+    @english
   end
 
-  def self.french
-    @french ||= self.new("/usr/share/hunspell/fr_FR.aff", "/usr/share/hunspell/fr_FR.dic")
+  def self.french(rebuild=false)
+    if rebuild || @french.nil?
+      @french = self.new("dictionaries/fr_FR.aff", "dictionaries/fr_FR.dic")
+    end
+
+    @french
   end
 
   def initialize(aff, dic)
     @dict = Hunspell.new(aff, dic)
   end
 
+  def add_word(word)
+    @dict.add(word)
+  end
+
+  def remove_word(word)
+    @dict.remove(word)
+  end
+
+  def check_word(word)
+    @dict.check(word)
+  end
+
   def spellcheck(html)
-    Nokogiri::HTML::DocumentFragment.parse(html).spellcheck(@dict)
+    results = {}
+    details_hash = {}
+
+    results[:html] = Nokogiri::HTML::DocumentFragment.parse(html).spellcheck(@dict, details_hash)
+
+    details_hash[:error_count] = details_hash.keys.length
+
+    results[:details] = details_hash
+
+    results
   end
 
   class <<self
@@ -37,9 +66,9 @@ class Nokogiri::HTML::DocumentFragment
 end
 
 class Nokogiri::XML::Node
-  def spellcheck(dict)
+  def spellcheck(dict, results)
     if spellcheckable?
-      inner = children.map {|child| child.spellcheck(dict) }.join
+      inner = children.map {|child| child.spellcheck(dict, results) }.join
       children.remove
       add_child Nokogiri::HTML::DocumentFragment.parse(inner)
     end
@@ -53,15 +82,19 @@ end
 
 class Nokogiri::XML::Text
   WORDS_REGEXP = RUBY_VERSION =~ /^1\.8/ ? /(&\w+;)|([\w']+)/ : /(&\p{Word}{2,3};)|([\p{Word}']+)/
-  ENTITIES = ["&gt;", "&lt;", "&amp;"]
+  ENTITIES = ["&gt;", "&lt;", "&amp;", "&nbsp;"]
 
-  def spellcheck(dict)
+  def spellcheck(dict, results)
     to_xhtml(:encoding => 'UTF-8').gsub(WORDS_REGEXP) do |word|
       if ENTITIES.include?(word) || dict.check(word)
         word
       else
-        "<span class=\"misspelled\">#{word}</span>"
-      end
+        # add word to results hash, increment occurrence count
+        results[word.downcase] ||= 0
+        results[word.downcase] += 1 
+
+        "<mark class=\"misspelled\">#{word}</mark>"
+       end
     end
   end
 end
