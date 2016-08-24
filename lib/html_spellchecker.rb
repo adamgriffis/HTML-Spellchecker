@@ -89,11 +89,17 @@ class Nokogiri::XML::Text
       if ENTITIES.include?(word) || dict.check(word)
         word
       else
-        # add word to results hash, increment occurrence count
-        results[word.downcase] ||= 0
-        results[word.downcase] += 1 
+        # this isn't a great workaround but can't get hunspell to recognize plural posessives which are pretty common so test that this word isn't
+        # correct without the traling apostophe
+        if word.end_with?("s'") && dict.check(word[0..-2])
+          word
+        else
+          # add word to results hash, increment occurrence count
+          results[word] ||= 0
+          results[word] += 1 
 
-        "<mark class=\"misspelled\">#{word}</mark>"
+          "<mark class=\"misspelled\">#{word}</mark>"
+        end
        end
     end
   end

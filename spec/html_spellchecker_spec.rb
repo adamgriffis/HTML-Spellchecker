@@ -43,7 +43,7 @@ describe HTML_Spellchecker do
   end
 
   it "doesn't try to spellcheck code tags" do
-    txt = "<code>class Foo\ndef hello\nputs 'Hi'\nend\nend</code>"
+    txt = "<code>class Foo\ndef hello\nputs 'Hi'\nend\nend</code><script>var code = 'here';</script><style>.dmb-rule{display: none!}</style>"
     results = checker.spellcheck(txt)
 
     results[:html].should == txt
@@ -59,7 +59,7 @@ describe HTML_Spellchecker do
   end
 
   it "handles titles and salutations" do 
-    txt = "<p>Dr. Julie Smith, PhD</p>"
+    txt = "<p>Dr. Julie Smith, PhD M.Ed.</p>"
     results = checker.spellcheck(txt)
 
     results[:html].should == txt
@@ -119,6 +119,15 @@ describe HTML_Spellchecker do
 
   it "does not split words with a quote" do
     txt = "<p>It doesn't matter</p>"
+    results = checker.spellcheck(txt)
+
+    results[:html].should == txt
+    results[:details].should == {error_count: 0}
+  end
+
+  it "handles weird encoded quotes" do 
+    txt = "<a>Dedicating the dogs' dog's the ‘Rock’</a><span>Say ‘yes’ or ‘yes, please’ to weird quotes</span><p>Retracing our forefather's sacrificial steps</p>"
+
     results = checker.spellcheck(txt)
 
     results[:html].should == txt
