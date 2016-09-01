@@ -8,7 +8,7 @@ require "set"
 class HTML_Spellchecker
   def self.english(rebuild=false)
     if rebuild || @english.nil?
-      @english = self.new("./dictionaries/en_US.aff", "dictionaries/en_US.dic")
+      @english = self.new(get_dict_path("en_US", "aff"), get_dict_path("en_US", "dic"))
     end
 
     @english
@@ -16,10 +16,18 @@ class HTML_Spellchecker
 
   def self.french(rebuild=false)
     if rebuild || @french.nil?
-      @french = self.new("./dictionaries/fr_FR.aff", "dictionaries/fr_FR.dic")
+      @french = self.new(get_dict_path("fr_FR", "aff"), get_dict_path("fr_FR", "dic"))
     end
 
     @french
+  end
+
+  def self.get_dict_path(lang_code, extension)
+    File.join(root, 'dictionaries', "#{lang_code}.#{extension}")
+  end
+
+  def self.root
+    File.dirname __dir__
   end
 
   def initialize(aff, dic)
