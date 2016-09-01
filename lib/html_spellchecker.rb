@@ -8,7 +8,7 @@ require "set"
 class HTML_Spellchecker
   def self.english(rebuild=false)
     if rebuild || @english.nil?
-      @english = self.new("dictionaries/en_US.aff", "dictionaries/en_US.dic")
+      @english = self.new("./dictionaries/en_US.aff", "dictionaries/en_US.dic")
     end
 
     @english
@@ -16,7 +16,7 @@ class HTML_Spellchecker
 
   def self.french(rebuild=false)
     if rebuild || @french.nil?
-      @french = self.new("dictionaries/fr_FR.aff", "dictionaries/fr_FR.dic")
+      @french = self.new("./dictionaries/fr_FR.aff", "dictionaries/fr_FR.dic")
     end
 
     @french
