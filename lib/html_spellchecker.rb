@@ -27,7 +27,7 @@ class HTML_Spellchecker
   end
 
   def self.root
-    File.dirname __dir__
+     Gem.datadir('html_spellchecker')
   end
 
   def initialize(aff, dic)
