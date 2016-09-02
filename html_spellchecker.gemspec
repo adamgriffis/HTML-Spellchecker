@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.description      = "Wants to spellcheck an HTML string properly? This gem is for you."
   s.summary          = "Wants to spellcheck an HTML string properly? This gem is for you."
   s.extra_rdoc_files = %w(README.md)
-  s.files            = Dir["MIT-LICENSE", "README.md", "Gemfile", "lib/**/*.rb", "data/**/*"]
+  s.files            = Dir["MIT-LICENSE", "README.md", "Gemfile", "lib/**/*.rb", "dictionaries/**/*"]
   s.require_paths    = ["lib"]
   s.rubygems_version = %q{1.3.7}
   s.add_dependency "nokogiri", "~>1.4"

@@ -23,7 +23,9 @@ class HTML_Spellchecker
   end
 
   def self.get_dict_path(lang_code, extension)
-    File.join(root, 'dictionaries', "#{lang_code}.#{extension}")
+    puts __FILE__
+    puts File.expand_path(File.join(File.dirname(__FILE__), "../dictionaries/#{lang_code}.#{extension}"))
+    File.expand_path(File.join(File.dirname(__FILE__), "../dictionaries/#{lang_code}.#{extension}"))
   end
 
   def self.root
