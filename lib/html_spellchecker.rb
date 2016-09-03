@@ -3,9 +3,16 @@
 require "hunspell-ffi"
 require "nokogiri"
 require "set"
+require 'htmlentities'
 
+EMAIL_REGEX = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/i
+LINK_REGEX = /\b(https?:\/\/([-\w\.]+)+(:\d+)?(\/([\w\/_\.]*(\?\S+)?)?)?)\b/i
 
 class HTML_Spellchecker
+
+  def self.entity_coder
+    @@entity_coder ||= HTMLEntities.new
+  end
   def self.english(rebuild=false)
     if rebuild || @english.nil?
       @english = self.new(get_dict_path("en_US", "aff"), get_dict_path("en_US", "dic"))
@@ -23,8 +30,6 @@ class HTML_Spellchecker
   end
 
   def self.get_dict_path(lang_code, extension)
-    puts __FILE__
-    puts File.expand_path(File.join(File.dirname(__FILE__), "../dictionaries/#{lang_code}.#{extension}"))
     File.expand_path(File.join(File.dirname(__FILE__), "../dictionaries/#{lang_code}.#{extension}"))
   end
 
@@ -91,11 +96,18 @@ class Nokogiri::XML::Node
 end
 
 class Nokogiri::XML::Text
-  WORDS_REGEXP = RUBY_VERSION =~ /^1\.8/ ? /(&\w+;)|([\w']+)/ : /(&\p{Word}{2,3};)|([\p{Word}']+)/
+  WORDS_REGEXP = RUBY_VERSION =~ /^1\.8/ ? /(&\w+;)|([\w']+)/ : /(&\p{Word}{2,3};)|([\p{Word}'|-]+)/
   ENTITIES = ["&gt;", "&lt;", "&amp;", "&nbsp;"]
 
   def spellcheck(dict, results)
-    to_xhtml(:encoding => 'UTF-8').gsub(WORDS_REGEXP) do |word|
+    text = to_xhtml(:encoding => 'UTF-8')
+
+    test = HTML_Spellchecker.entity_coder.decode(text)
+
+    text.gsub!(EMAIL_REGEX, ' ')
+    text.gsub!(LINK_REGEX, ' ')
+
+    text.gsub(WORDS_REGEXP) do |word|
       if ENTITIES.include?(word) || dict.check(word)
         word
       else

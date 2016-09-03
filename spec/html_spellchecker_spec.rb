@@ -133,4 +133,32 @@ describe HTML_Spellchecker do
     results[:html].should == txt
     results[:details].should == {error_count: 0}
   end
+
+  it "ignores email addresses and URLs" do 
+    txt = "Here's an email test@test.com, you can reach it at http://www.test.com/email or https://www.test.com/secure"
+
+    results = checker.spellcheck(txt)
+
+    # we strip the email and URL out, but we ignore the marked HTML so it's fine
+    results[:html].should == "Here's an email  , you can reach it at   or  "
+    results[:details].should == {error_count: 0}
+  end
+
+  it "can deal with weirdos who use HTML entities in the middle of sentences" do 
+    txt = "I can't use spaces&nbsp;like a normal person."
+
+    results = checker.spellcheck(txt)
+
+    results[:html].should == "I can't use spaces like a normal person."
+    results[:details].should == {error_count: 0}
+  end
+
+  it "handles hyphenated words" do 
+    txt = "Here's a mis-spelled word, miss. It's well-known that this is an accepted usage, it's matter-of-fact at this point. Drop your pre-conceived, pre-packaged, state-of-the-art notions at the door. It's mid-July after all."
+
+    results = checker.spellcheck(txt)
+
+    results[:html].should == "Here's a <mark class=\"misspelled\">mis-spelled</mark> word, miss. It's well-known that this is an accepted usage, it's matter-of-fact at this point. Drop your pre-conceived, pre-packaged, state-of-the-art notions at the door. It's mid-July after all."
+    results[:details].should == {'mis-spelled' => 1, error_count: 1}
+  end
 end
