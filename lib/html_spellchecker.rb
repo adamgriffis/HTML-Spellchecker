@@ -1,6 +1,6 @@
 # Encoding: UTF-8
 
-require "hunspell-ffi"
+require "ffi/hunspell"
 require "nokogiri"
 require "set"
 require 'htmlentities'
@@ -15,30 +15,25 @@ class HTML_Spellchecker
   end
   def self.english(rebuild=false)
     if rebuild || @english.nil?
-      @english = self.new(get_dict_path("en_US", "aff"), get_dict_path("en_US", "dic"))
+      @english = self.new("en_US")
     end
-
     @english
   end
 
   def self.french(rebuild=false)
     if rebuild || @french.nil?
-      @french = self.new(get_dict_path("fr_FR", "aff"), get_dict_path("fr_FR", "dic"))
+      @french = self.new("fr_FR")
     end
-
     @french
-  end
-
-  def self.get_dict_path(lang_code, extension)
-    File.expand_path(File.join(File.dirname(__FILE__), "../dictionaries/#{lang_code}.#{extension}"))
   end
 
   def self.root
      Gem.datadir('html_spellchecker')
   end
 
-  def initialize(aff, dic)
-    @dict = Hunspell.new(aff, dic)
+  def initialize(lang)
+    FFI::Hunspell.directories = [File.expand_path(File.join(File.dirname(__FILE__), "../dictionaries/"))]
+    @dict = FFI::Hunspell.dict(lang)
   end
 
   def add_word(word)
@@ -50,7 +45,7 @@ class HTML_Spellchecker
   end
 
   def check_word(word)
-    @dict.check(word)
+    @dict.check?(word)
   end
 
   def spellcheck(html)
@@ -108,17 +103,17 @@ class Nokogiri::XML::Text
     text.gsub!(LINK_REGEX, ' ')
 
     text.gsub(WORDS_REGEXP) do |word|
-      if ENTITIES.include?(word) || dict.check(word)
+      if ENTITIES.include?(word) || dict.check?(word)
         word
       else
         # this isn't a great workaround but can't get hunspell to recognize plural posessives which are pretty common so test that this word isn't
         # correct without the traling apostophe
-        if word.end_with?("s'") && dict.check(word[0..-2])
+        if word.end_with?("s'") && dict.check?(word[0..-2])
           word
         else
           # add word to results hash, increment occurrence count
           results[word] ||= 0
-          results[word] += 1 
+          results[word] += 1
 
           "<mark class=\"misspelled\">#{word}</mark>"
         end
