@@ -61,6 +61,10 @@ class HTML_Spellchecker
     results
   end
 
+  def close_dict
+    @dict.close if @dict
+  end
+
   class <<self
     attr_accessor :spellcheckable_tags
   end
