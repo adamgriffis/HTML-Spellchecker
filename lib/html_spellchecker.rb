@@ -45,6 +45,7 @@ class HTML_Spellchecker
   end
 
   def check_word(word)
+    puts "Checking word: #{word}"
     @dict.check?(word)
   end
 
@@ -66,11 +67,12 @@ class HTML_Spellchecker
   end
 
   class <<self
-    attr_accessor :spellcheckable_tags
+    attr_accessor :spellcheckable_tags, :skipable_tags
   end
   self.spellcheckable_tags = Set.new(%w(p ol ul li div header article nav section footer aside dd dt dl
                                         span blockquote cite q mark ins del table td th tr tbody thead tfoot
-                                        a b i s em small strong hgroup h1 h2 h3 h4 h5 h6))
+                                        a b i s em small strong hgroup h1 h2 h3 h4 h5 h6 body))
+  self.skipable_tags = Set.new(%w(script style))
 end
 
 class Nokogiri::HTML::DocumentFragment
@@ -90,7 +92,11 @@ class Nokogiri::XML::Node
   end
 
   def spellcheckable?
-    HTML_Spellchecker.spellcheckable_tags.include? name
+    #name != "script"
+    #puts "Spellcheckable? #{name}"
+    #true
+    #HTML_Spellchecker.spellcheckable_tags.include? name
+    !HTML_Spellchecker.skipable_tags.include? name
   end
 end
 
@@ -101,12 +107,13 @@ class Nokogiri::XML::Text
   def spellcheck(dict, results)
     text = to_xhtml(:encoding => 'UTF-8')
 
-    test = HTML_Spellchecker.entity_coder.decode(text)
+    text = HTML_Spellchecker.entity_coder.decode(text)
 
     text.gsub!(EMAIL_REGEX, ' ')
     text.gsub!(LINK_REGEX, ' ')
 
     text.gsub(WORDS_REGEXP) do |word|
+      #puts "Checking word: #{word}"
       if ENTITIES.include?(word) || dict.check?(word)
         word
       else
@@ -121,7 +128,7 @@ class Nokogiri::XML::Text
 
           "<mark class=\"misspelled\">#{word}</mark>"
         end
-       end
+      end
     end
   end
 end
