@@ -101,13 +101,13 @@ class Nokogiri::XML::Node
 end
 
 class Nokogiri::XML::Text
-  WORDS_REGEXP = RUBY_VERSION =~ /^1\.8/ ? /(&\w+;)|([\w']+)/ : /(&#?\p{Word}{2,3};)|([\p{Word}'-]+)/
-  ENTITIES = ["&gt;", "&lt;", "&amp;", "&nbsp;"]
+  WORDS_REGEXP = RUBY_VERSION =~ /^1\.8/ ? /(&\w+;)|([\w']+)/ : /(&#?\p{Word}{2,3};)|([\p{Word}+'-]+)/
+  ENTITIES = ["&gt;", "&lt;", "&amp;", "&nbsp;", "-"]
 
   def spellcheck(dict, results)
     text = to_xhtml(:encoding => 'UTF-8')
 
-    #text = HTML_Spellchecker.entity_coder.decode(text)
+    text = HTML_Spellchecker.entity_coder.decode(text)
 
     text.gsub!(EMAIL_REGEX, ' ')
     text.gsub!(LINK_REGEX, ' ')
